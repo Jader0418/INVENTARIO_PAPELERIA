@@ -1,9 +1,6 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import List
 import json
-
-app = FastAPI()
+from typing import List
+from pydantic import BaseModel
 
 #  Modelo
 class Item(BaseModel):
@@ -11,42 +8,22 @@ class Item(BaseModel):
     name: str
     price: float
 
-# Archivo JSON
-FILE_NAME = "data.json"
 
-# 🔹 FUNCIONES DE ARCHIVO
-
+#  FUNCIÓN PARA LEER
 
 def load_items() -> List[Item]:
     try:
-        with open(FILE_NAME, "r") as f:
-            raw_data = json.load(f)
-            items = [Item(**item) for item in raw_data]
+        with open("data.json", "r") as f:
+            raw_data = json.load(f)  # Lee lista de dicts
+            items = [Item(**item) for item in raw_data]  # Convierte a objetos Item
             return items
     except FileNotFoundError:
         return []
 
-def save_items(items: List[Item]):
-    with open(FILE_NAME, "w") as f:
-        json.dump([item.dict() for item in items], f, indent=4)
 
-# 🔹 ENDPOINTS
+#  FUNCIÓN PARA GUARDAR
 
-# Obtener todos los items
-@app.get("/items", response_model=List[Item])
-def get_items():
-    return load_items()
-
-#  Crear un item
-@app.post("/items", response_model=Item)
-def create_item(item: Item):
-    items = load_items()
-
-    #  Validar ID único
-    for i in items:
-        if i.id == item.id:
-            raise HTTPException(status_code=400, detail="El ID ya existe")
-
-    items.append(item)
-    save_items(items)
-    return item
+def save_items(items: List[Item]) -> None:
+    data_to_save = [item.dict() for item in items]
+    with open("data.json", "w") as f:
+        json.dump(data_to_save, f, indent=2)
