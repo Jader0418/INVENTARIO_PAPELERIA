@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "nombre": "Cuaderno",
+    "stock": 50,
+    "precio": 5000
+  },
+  {
+    "id": 2,
+    "nombre": "Lápiz",
+    "stock": 100,
+    "precio": 1000
+  },
+  {
+    "id": 3,
+    "nombre": "Borrador",
+    "stock": 80,
+    "precio": 800
+  },
+  {
+    "id": 4,
+    "nombre": "Regla",
+    "stock": 40,
+    "precio": 2000
+  },
+  {
+    "id": 5,
+    "nombre": "Marcador",
+    "stock": 30,
+    "precio": 3000
+  }
+]
