@@ -1,94 +1,193 @@
-import json  # Permite trabajar con archivos JSON
-from typing import List  # Permite usar listas tipadas
-from pydantic import BaseModel  # Permite crear modelos de datos validados
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field, ValidationError, field_validator
+from datetime import datetime
 
-# MODELO
+app = FastAPI()
 
-class Item(BaseModel):
-    id: int        # Identificador del producto
-    name: str      # Nombre del producto
-    price: float   # Precio del producto
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+productos_db = []
 
 
-# FUNCIÓN PARA LEER DATOS
+class ProductoPapeleria(BaseModel):
+    nombre: str = Field(min_length=3, max_length=80)
+    categoria: str = Field(min_length=3, max_length=40)
+    precio: float = Field(gt=0)
+    stock: int = Field(ge=0)
+    Descripcion: str = Field(min_length=3, max_length=20)
 
-def load_items() -> List[Item]:
-    """
-    Esta función lee los datos almacenados en el archivo data.json
-    y los convierte en una lista de objetos tipo Item.
-    """
+    @field_validator("nombre")
+    @classmethod
+    def validar_nombre(cls, value):
+        if not value.strip():
+            raise ValueError("El nombre no puede estar vacío")
+        return value.strip()
+
+    @field_validator("categoria")
+    @classmethod
+    def validar_categoria(cls, value):
+        categorias_validas = ["Escolar", "Oficina", "Arte", "Tecnología"]
+        if value not in categorias_validas:
+            raise ValueError("La categoría no es válida")
+        return value
+
+    @field_validator("Descripcion")
+    @classmethod
+    def validar_Descripcion(cls, value):
+        return value.strip().upper()
+
+
+@app.get("/")
+def inicio(request: Request):
+    # Mostrar directamente la vista de productos en la raíz
+    return ver_productos(request)
+
+
+@app.get("/productos", response_class=HTMLResponse)
+def ver_productos(request: Request):
+    # Permitir indicar un índice a editar mediante query param ?editar=0
+    editar = request.query_params.get("editar")
+    edit_index = None
+    edit_data = None
+    if editar is not None:
+        try:
+            idx = int(editar)
+            if 0 <= idx < len(productos_db):
+                edit_index = idx
+                # convertir el modelo pydantic a dict para rellenar el formulario
+                edit_data = productos_db[idx].model_dump()
+        except Exception:
+            edit_index = None
+
+    return templates.TemplateResponse(
+        "productos.html",
+        {
+            "request": request,
+            "title": "Papelería Central",
+            "heading": "Inventario de Papelería",
+            "year": datetime.now().year,
+            "productos": productos_db,
+            "errores": [],
+            "form_data": {},
+            "edit_index": edit_index,
+            "edit_data": edit_data,
+        }
+    )
+
+
+@app.post("/productos", response_class=HTMLResponse)
+def crear_producto_html(
+    request: Request,
+    nombre: str = Form(...),
+    categoria: str = Form(...),
+    precio: float = Form(...),
+    stock: int = Form(...),
+    Descripcion: str = Form(...)
+):
+    form_data = {
+        "nombre": nombre,
+        "categoria": categoria,
+        "precio": precio,
+        "stock": stock,
+        "Descripcion": Descripcion
+    }
+
     try:
-        # Abre el archivo en modo lectura ("r")
-        with open("data.json", "r") as f:
-            
-            # Convierte el contenido JSON a una lista de diccionarios
-            raw_data = json.load(f)
-            
-            # Convierte cada diccionario en un objeto Item
-            # **item desempaqueta el diccionario en los atributos del modelo
-            items = [Item(**item) for item in raw_data]
-            
-            # Retorna la lista de objetos Item
-            return items
+        producto = ProductoPapeleria(
+            nombre=nombre,
+            categoria=categoria,
+            precio=precio,
+            stock=stock,
+            Descripcion=Descripcion
+        )
+        productos_db.append(producto)
+        errores = []
+        form_data = {}
+    except ValidationError as e:
+        errores = [err["msg"] for err in e.errors()]
 
-    except FileNotFoundError:
-        # Si el archivo no existe, retorna una lista vacía
-        return []
-
-#  FUNCIÓN PARA GUARDAR DATOS
-
-def save_items(items: List[Item]) -> None:
-    """
-    Esta función guarda una lista de objetos Item en el archivo data.json.
-    """
-    
-    # Convierte cada objeto Item en un diccionario
-    # Esto es necesario porque JSON no guarda objetos directamente
-    data_to_save = [item.dict() for item in items]
-    
-    # Abre el archivo en modo escritura ("w")
-    # Si no existe, lo crea automáticamente
-    with open("data.json", "w") as f:
-        
-        # Guarda los datos en formato JSON
-        # indent=2 hace que el archivo sea más legible (ordenado)
-        json.dump(data_to_save, f, indent=2)
+    return templates.TemplateResponse(
+        "productos.html",
+        {
+            "request": request,
+            "title": "Papelería Central",
+            "heading": "Inventario de Papelería",
+            "year": datetime.now().year,
+            "productos": productos_db,
+            "errores": errores,
+            "form_data": form_data
+        }
+    )
 
 
-#  FUNCIÓN PARA AGREGAR UN ITEM
+@app.post("/productos/actualizar", response_class=HTMLResponse)
+def actualizar_producto_html(
+    request: Request,
+    idx: int = Form(...),
+    nombre: str = Form(...),
+    categoria: str = Form(...),
+    precio: float = Form(...),
+    stock: int = Form(...),
+    Descripcion: str = Form(...),
+):
+    errores = []
+    try:
+        producto = ProductoPapeleria(
+            nombre=nombre,
+            categoria=categoria,
+            precio=precio,
+            stock=stock,
+            Descripcion=Descripcion,
+        )
+        if 0 <= idx < len(productos_db):
+            productos_db[idx] = producto
+        else:
+            errores.append("Índice de producto inválido")
+    except ValidationError as e:
+        errores = [err["msg"] for err in e.errors()]
 
-def add_item(new_item: Item) -> Item:
-    """
-    Esta función agrega un nuevo Item al archivo JSON.
-    """
-    
-    # Carga los datos actuales del archivo
-    items = load_items()
-    
-    # Agrega el nuevo item a la lista
-    items.append(new_item)
-    
-    # Guarda nuevamente toda la lista con el nuevo elemento incluido
-    save_items(items)
-    
-    # Retorna el item agregado
-    return new_item
+    return templates.TemplateResponse(
+        "productos.html",
+        {
+            "request": request,
+            "title": "Papelería Central",
+            "heading": "Inventario de Papelería",
+            "year": datetime.now().year,
+            "productos": productos_db,
+            "errores": errores,
+            "form_data": {},
+            "edit_index": None,
+            "edit_data": None,
+        },
+    )
 
-#  PRUEBA DEL PROGRAMA
 
-if __name__ == "__main__":
-    """
-    Este bloque solo se ejecuta si el archivo se corre directamente.
-    Sirve para probar el funcionamiento del programa.
-    """
+@app.post("/productos/eliminar", response_class=HTMLResponse)
+def eliminar_producto_html(request: Request, idx: int = Form(...)):
+    errores = []
+    try:
+        if 0 <= idx < len(productos_db):
+            productos_db.pop(idx)
+        else:
+            errores.append("Índice de producto inválido")
+    except Exception as e:
+        errores.append(str(e))
 
-    # Crear algunos objetos de prueba
-    item1 = Item(id=1, name="Cuaderno", price=5000)
-    item2 = Item(id=2, name="Lapiz", price=1000)
-
-    # Agregar los items al archivo JSON
-    add_item(item1)
-    add_item(item2)
-
-    # Leer y mostrar los datos guardados
-    print(load_items())
+    return templates.TemplateResponse(
+        "productos.html",
+        {
+            "request": request,
+            "title": "Papelería Central",
+            "heading": "Inventario de Papelería",
+            "year": datetime.now().year,
+            "productos": productos_db,
+            "errores": errores,
+            "form_data": {},
+            "edit_index": None,
+            "edit_data": None,
+        },
+    )
