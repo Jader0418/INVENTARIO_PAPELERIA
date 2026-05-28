@@ -10,21 +10,21 @@
     <div class="header-inner">
       <div>
         <h1>{{ heading }}</h1>
-        <p class="subtitle">Gestiona tu inventario de forma sencilla: agrega, edita y elimina productos.</p>
+        <p class="subtitle">Gestion de inventariado de la Miscelanea Jader's, para tener de una forma sencilla de poder; agregar, editar , listar y eliminar productos.</p>
       </div>
-      <div class="brand">📚 Papelería Central</div>
+      <div class="brand">📚 Miscelanea Jader's</div>
     </div>
   </header>
 
   <main>
     <section class="hero">
-      <h2>Información — MISCELANEA JADER</h2>
+      <h2>INFORMACION — MISCELANEA JADER</h2>
       <p class="brand-lead">Tu papelería de confianza: útiles escolares, material de oficina y accesorios creativos.</p>
 
       <div class="info-grid">
         <div>
           <strong>🏷️ Nombre:</strong>
-          <div>MISCELANEA JADER</div>
+          <div>MISCELANEA JADER'S </div>
         </div>
         <div>
           <strong>📍 Dirección:</strong>
@@ -32,7 +32,7 @@
         </div>
         <div>
           <strong>⏰ Horario:</strong>
-          <div>Lun–Sáb 9:00 — 19:00</div>
+          <div>Lun – Sáb 9:00am — 7:00pm</div>
         </div>
         <div>
           <strong>📞 Contacto:</strong>
@@ -63,16 +63,15 @@
           <div>
             <label>Nombre</label>
             <input name="nombre" placeholder="Ej: Cuaderno 100 hojas" value="{{ form_data.nombre or '' }}" required>
-            <small class="help">Nombre descriptivo del producto.</small>
+            <small class="help">Nombre del producto.</small>
           </div>
 
           <div>
             <label>Categoría</label>
             <select name="categoria" required>
               <option value="">Seleccione...</option>
-              <option value="Escolar">Escolar</option>
+              <option value="Estudiantil">Estudiantil</option>
               <option value="Oficina">Oficina</option>
-              <option value="Arte">Arte</option>
               <option value="Tecnología">Tecnología</option>
             </select>
             <small class="help">Elige la categoría que mejor corresponda.</small>
@@ -80,8 +79,8 @@
 
           <div>
             <label>Precio</label>
-            <input type="number" step="0.01" name="precio" placeholder="0.00" value="{{ form_data.precio or '' }}" required>
-            <small class="help">Precio en moneda local (ej: 12.50).</small>
+            <input type="number" step="0.01" name="precio" placeholder=" $ " value="{{ form_data.precio or '' }}" required>
+            <small class="help">Precio en moneda local (ej: $ 25.000).</small>
           </div>
 
           <div>
@@ -118,7 +117,6 @@
             <select name="categoria" required>
               <option value="Escolar" {% if edit_data.categoria == 'Escolar' %}selected{% endif %}>Escolar</option>
               <option value="Oficina" {% if edit_data.categoria == 'Oficina' %}selected{% endif %}>Oficina</option>
-              <option value="Arte" {% if edit_data.categoria == 'Arte' %}selected{% endif %}>Arte</option>
               <option value="Tecnología" {% if edit_data.categoria == 'Tecnología' %}selected{% endif %}>Tecnología</option>
             </select>
           </div>
@@ -191,7 +189,7 @@
   </main>
 
   <footer>
-    <p>&copy; {{ year }} Papelería Central</p>
+    <p>&copy; {{ year }} Miscelanea Jader's</p>
   </footer>
 </body>
 </html>
