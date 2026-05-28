@@ -2,160 +2,178 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title }}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
 </head>
 <body>
-  <header>
-    <div class="header-inner">
+
+<header>
+  <div class="header-inner">
+    <div class="header-logo">
+      <div class="logo-icon">🏪</div>
       <div>
-        <h1>{{ heading }}</h1>
-        <p class="subtitle">Gestion de inventariado de la Miscelanea Jader's, para tener de una forma sencilla de poder; agregar, editar , listar y eliminar productos.</p>
+        <h1>Miscelánea Jader's</h1>
+        <p class="subtitle">Sistema de inventario · Gran Britalia, Bogotá</p>
       </div>
-      <div class="brand">📚 Miscelanea Jader's</div>
     </div>
-  </header>
+    <div class="header-brand">📚 Papelería Central</div>
+  </div>
+</header>
+<div class="pattern-banner"></div>
 
-  <main>
-    <section class="hero">
-      <h2>INFORMACION — MISCELANEA JADER</h2>
-      <p class="brand-lead">Tu papelería de confianza: útiles escolares, material de oficina y accesorios creativos.</p>
+<main>
 
-      <div class="info-grid">
-        <div>
-          <strong>🏷️ Nombre:</strong>
-          <div>MISCELANEA JADER'S </div>
-        </div>
-        <div>
-          <strong>📍 Dirección:</strong>
-          <div>Cra 81j #47b -53 Sur - Gran Britalia</div>
-        </div>
-        <div>
-          <strong>⏰ Horario:</strong>
-          <div>Lun – Sáb 9:00am — 7:00pm</div>
-        </div>
-        <div>
-          <strong>📞 Contacto:</strong>
-          <div>+57 350 5218141</div>
-        </div>
-        <div class="full-note">
-          <strong>¿Porque somos la mejor Miscelanea?:</strong>
-          <div>Somos la mejor opción para tus necesidades de papelería: ofrecemos productos de calidad a precios accesibles, con atención amable y rápida.</div>
-        </div>
+  <!-- INFO TIENDA -->
+  <div class="hero">
+    <div class="hero-top">
+      <div class="hero-avatar">🏪</div>
+      <div>
+        <h2>MISCELÁNEA JADER</h2>
+        <p>Tu papelería de confianza: útiles escolares, material de oficina y accesorios creativos.</p>
       </div>
-    </section>
+    </div>
+    <div class="info-grid">
+      <div class="info-cell">
+        <strong>📍 Dirección</strong>
+        <span>Cra 81j #47b -53 Sur · Gran Britalia</span>
+      </div>
+      <div class="info-cell">
+        <strong>📞 Contacto</strong>
+        <span>+57 350 5218141</span>
+      </div>
+      <div class="info-cell">
+        <strong>⏰ Horario</strong>
+        <span>Lun – Sáb · 9:00am — 8:00pm</span>
+      </div>
+      <div class="info-cell">
+        <strong>✨ ¿Por qué elegirnos?</strong>
+        <span>Productos de calidad a precios accesibles, con atención amable y rápida.</span>
+      </div>
+    </div>
+  </div>
 
-    <section class="grid">
-      <div class="panel">
+  <!-- FORMULARIOS -->
+  <div class="grid">
+
+    <!-- AGREGAR -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon">➕</div>
         <h3>Agregar producto</h3>
+      </div>
+      <div class="panel-body">
 
         {% if errores %}
         <div class="errores">
-          <ul>
-            {% for err in errores %}
-              <li>{{ err }}</li>
-            {% endfor %}
-          </ul>
+          <ul>{% for err in errores %}<li>{{ err }}</li>{% endfor %}</ul>
         </div>
         {% endif %}
 
         <form action="/productos" method="post" class="form-grid">
-          <div>
-            <label>Nombre</label>
+          <div class="field">
+            <label>Producto</label>
             <input name="nombre" placeholder="Ej: Cuaderno 100 hojas" value="{{ form_data.nombre or '' }}" required>
-            <small class="help">Nombre del producto.</small>
+            <span class="help">Elije el producto que deseas agregar</span>
           </div>
-
-          <div>
+          <div class="field">
             <label>Categoría</label>
             <select name="categoria" required>
               <option value="">Seleccione...</option>
-              <option value="Estudiantil">Estudiantil</option>
-              <option value="Oficina">Oficina</option>
-              <option value="Tecnología">Tecnología</option>
+              <option value="Estudiantil" {% if form_data.categoria == 'Estudiantil' %}selected{% endif %}>📚 Estudiantil</option>
+              <option value="Oficina"     {% if form_data.categoria == 'Oficina'     %}selected{% endif %}>🖊️ Oficina</option>
+              <option value="Tecnología"  {% if form_data.categoria == 'Tecnología'  %}selected{% endif %}>💻 Tecnología</option>
             </select>
-            <small class="help">Elige la categoría que mejor corresponda.</small>
           </div>
-
-          <div>
-            <label>Precio</label>
-            <input type="number" step="0.01" name="precio" placeholder=" $ " value="{{ form_data.precio or '' }}" required>
-            <small class="help">Precio en moneda local (ej: $ 25.000).</small>
+          <div class="field">
+            <label>Precio ($)</label>
+            <input type="number" step="0.01" min="0.01" name="precio" placeholder="0.00" value="{{ form_data.precio or '' }}" required>
+            <span class="help">Precio en pesos colombianos</span>
           </div>
-
-          <div>
+          <div class="field">
             <label>Stock</label>
-            <input type="number" name="stock" min="0" value="{{ form_data.stock or '' }}" required>
-            <small class="help">Cantidad disponible en almacén.</small>
+            <input type="number" name="stock" min="0" placeholder="0" value="{{ form_data.stock or '' }}" required>
+            <span class="help">Unidades en el inventario</span>
           </div>
-
-          <div class="full">
+          <div class="field full">
             <label>Descripción</label>
-            <input name="Descripcion" placeholder="Breve descripción" value="{{ form_data.Descripcion or '' }}" required>
-            <small class="help">Máx. 20 caracteres. Se guardará en mayúsculas.</small>
+            <input name="descripcion" placeholder="Breve descripción del producto" value="{{ form_data.descripcion or '' }}" required maxlength="20">
+            <span class="help">Breve descripción del producto. Máx. 20 caracteres.</span>
           </div>
-
-          <div class="full actions">
-            <button class="btn" type="submit">➕ Agregar producto</button>
+          <div class="full actions-row">
+            <button class="btn btn-primary" type="submit">➕ Agregar producto</button>
           </div>
         </form>
       </div>
+    </div>
 
-      {% if edit_index is not none and edit_data %}
-      <div class="panel">
-        <h3>Editar producto</h3>
+    <!-- EDITAR -->
+    {% if edit_data %}
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon">✏️</div>
+        <h3>Editando producto #{{ edit_data.id }}</h3>
+      </div>
+      <div class="panel-body">
         <form action="/productos/actualizar" method="post" class="form-grid">
-          <input type="hidden" name="idx" value="{{ edit_index }}">
+          <input type="hidden" name="pid" value="{{ edit_data.id }}">
 
-          <div>
+          <div class="field">
             <label>Nombre</label>
             <input name="nombre" value="{{ edit_data.nombre }}" required>
           </div>
-
-          <div>
+          <div class="field">
             <label>Categoría</label>
             <select name="categoria" required>
-              <option value="Escolar" {% if edit_data.categoria == 'Escolar' %}selected{% endif %}>Escolar</option>
-              <option value="Oficina" {% if edit_data.categoria == 'Oficina' %}selected{% endif %}>Oficina</option>
-              <option value="Tecnología" {% if edit_data.categoria == 'Tecnología' %}selected{% endif %}>Tecnología</option>
+              <option value="Estudiantil" {% if edit_data.categoria == 'Estudiantil' %}selected{% endif %}>📚 Estudiantil</option>
+              <option value="Oficina"     {% if edit_data.categoria == 'Oficina'     %}selected{% endif %}>🖊️ Oficina</option>
+              <option value="Tecnología"  {% if edit_data.categoria == 'Tecnología'  %}selected{% endif %}>💻 Tecnología</option>
             </select>
           </div>
-
-          <div>
-            <label>Precio</label>
+          <div class="field">
+            <label>Precio ($)</label>
             <input type="number" step="0.01" name="precio" value="{{ edit_data.precio }}" required>
           </div>
-
-          <div>
+          <div class="field">
             <label>Stock</label>
             <input type="number" name="stock" value="{{ edit_data.stock }}" required>
           </div>
-
-          <div class="full">
+          <div class="field full">
             <label>Descripción</label>
-            <input name="Descripcion" value="{{ edit_data.Descripcion }}" required>
+            <input name="descripcion" value="{{ edit_data.descripcion }}" required maxlength="20">
           </div>
-
-          <div class="full actions">
-            <button class="btn" type="submit">✏️ Actualizar</button>
-            <a class="btn btn-secondary" href="/productos">Cancelar</a>
+          <div class="full actions-row">
+            <button class="btn btn-warning" type="submit">✏️ Actualizar</button>
+            <a class="btn btn-ghost" href="/productos">Cancelar</a>
           </div>
         </form>
       </div>
-      {% endif %}
-    </section>
+    </div>
+    {% endif %}
 
-    <section>
-      <h3>Listado de productos</h3>
-      {% if productos|length == 0 %}
-        <p class="muted">No hay productos aún. Añade tu primer producto usando el formulario.</p>
-      {% else %}
-      <div class="table-wrap">
+  </div>
+
+  <!-- TABLA -->
+  <div class="section-table">
+    <div class="section-table-header">
+      <h3>
+        📦 Listado de productos
+        <span class="badge badge-teal">{{ productos|length }} productos</span>
+      </h3>
+    </div>
+
+    {% if productos|length == 0 %}
+    <div class="empty-state">
+      <div class="empty-icon">🛒</div>
+      <p>No hay productos aún.<br>Añade tu primer producto usando el formulario.</p>
+    </div>
+    {% else %}
+    <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>#</th>
-            <th>Nombre</th>
+            <th>Producto</th>
             <th>Categoría</th>
             <th>Precio</th>
             <th>Stock</th>
@@ -166,30 +184,47 @@
         <tbody>
           {% for p in productos %}
           <tr>
-            <td>{{ loop.index0 }}</td>
-            <td>{{ p.nombre }}</td>
-            <td>{{ p.categoria }}</td>
-            <td>{{ '%.2f'|format(p.precio) }}</td>
-            <td>{{ p.stock }}</td>
-            <td>{{ p.Descripcion }}</td>
-            <td class="actions">
-              <a class="link-edit" href="/productos?editar={{ loop.index0 }}">✏️ Editar</a>
-              <form action="/productos/eliminar" method="post" style="display:inline">
-                <input type="hidden" name="idx" value="{{ loop.index0 }}">
-                <button class="btn btn-danger" type="submit">🗑️ Eliminar</button>
-              </form>
+            <td><span class="product-id">{{ p.id }}</span></td>
+            <td><span class="product-name">{{ p.nombre }}</span></td>
+            <td>
+              {% if p.categoria == 'Estudiantil' %}
+                <span class="badge badge-estudiantil">📚 Estudiantil</span>
+              {% elif p.categoria == 'Oficina' %}
+                <span class="badge badge-oficina">🖊️ Oficina</span>
+              {% else %}
+                <span class="badge badge-tecnologia">💻 Tecnología</span>
+              {% endif %}
+            </td>
+            <td><span class="price">${{ '%.2f'|format(p.precio) }}</span></td>
+            <td>
+              <span class="{% if p.stock <= 5 %}stock-low{% endif %}">
+                {{ p.stock }} uds{% if p.stock <= 5 %} ⚠️{% endif %}
+              </span>
+            </td>
+            <td>{{ p.descripcion }}</td>
+            <td>
+              <div class="td-actions">
+                <a class="btn btn-warning btn-sm" href="/productos?editar={{ p.id }}">✏️</a>
+                <form action="/productos/eliminar" method="post" style="display:inline"
+                      onsubmit="return confirm('¿Eliminar {{ p.nombre }}?')">
+                  <input type="hidden" name="pid" value="{{ p.id }}">
+                  <button class="btn btn-danger btn-sm" type="submit">🗑️</button>
+                </form>
+              </div>
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
-      </div>
-      {% endif %}
-    </section>
-  </main>
+    </div>
+    {% endif %}
+  </div>
 
-  <footer>
-    <p>&copy; {{ year }} Miscelanea Jader's</p>
-  </footer>
+</main>
+
+<footer>
+  <p>&copy; {{ year }} <span>Miscelánea Jader's</span> · Gran Britalia, Bogotá · </p>
+</footer>
+
 </body>
 </html>
