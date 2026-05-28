@@ -1,16 +1,44 @@
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, ValidationError, field_validator
 from datetime import datetime
+import sqlite3
+import os
 
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-productos_db = []
+DB_PATH = "inventario.db"
+
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    conn = get_db()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS productos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            categoria TEXT NOT NULL,
+            precio REAL NOT NULL,
+            stock INTEGER NOT NULL,
+            descripcion TEXT NOT NULL,
+            creado_en TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+init_db()
 
 
 class ProductoPapeleria(BaseModel):
@@ -18,7 +46,7 @@ class ProductoPapeleria(BaseModel):
     categoria: str = Field(min_length=3, max_length=40)
     precio: float = Field(gt=0)
     stock: int = Field(ge=0)
-    Descripcion: str = Field(min_length=3, max_length=20)
+    descripcion: str = Field(min_length=3, max_length=20)
 
     @field_validator("nombre")
     @classmethod
@@ -35,74 +63,105 @@ class ProductoPapeleria(BaseModel):
             raise ValueError("La categoría no es válida")
         return value
 
-    @field_validator("Descripcion")
+    @field_validator("descripcion")
     @classmethod
-    def validar_Descripcion(cls, value):
+    def validar_descripcion(cls, value):
         return value.strip().upper()
 
 
-@app.get("/")
+def get_all_productos():
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM productos ORDER BY id DESC").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_producto_by_id(pid: int):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM productos WHERE id = ?", (pid,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def insert_producto(p: ProductoPapeleria):
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO productos (nombre, categoria, precio, stock, descripcion, creado_en) VALUES (?,?,?,?,?,?)",
+        (p.nombre, p.categoria, p.precio, p.stock, p.descripcion, datetime.now().isoformat())
+    )
+    conn.commit()
+    conn.close()
+
+
+def update_producto(pid: int, p: ProductoPapeleria):
+    conn = get_db()
+    conn.execute(
+        "UPDATE productos SET nombre=?, categoria=?, precio=?, stock=?, descripcion=? WHERE id=?",
+        (p.nombre, p.categoria, p.precio, p.stock, p.descripcion, pid)
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_producto(pid: int):
+    conn = get_db()
+    conn.execute("DELETE FROM productos WHERE id = ?", (pid,))
+    conn.commit()
+    conn.close()
+
+
+def base_context(request: Request, **kwargs):
+    return {
+        "title": "Miscelánea Jader's",
+        "heading": "Inventario de Papelería",
+        "year": datetime.now().year,
+        **kwargs
+    }
+
+
+@app.get("/", response_class=HTMLResponse)
 def inicio(request: Request):
     return ver_productos(request)
 
 
 @app.get("/productos", response_class=HTMLResponse)
 def ver_productos(request: Request):
-    editar = request.query_params.get("editar")
-    edit_index = None
+    editar_id = request.query_params.get("editar")
     edit_data = None
-    if editar is not None:
+    if editar_id:
         try:
-            idx = int(editar)
-            if 0 <= idx < len(productos_db):
-                edit_index = idx
-                edit_data = productos_db[idx].model_dump()
+            edit_data = get_producto_by_id(int(editar_id))
         except Exception:
-            edit_index = None
+            pass
 
     return templates.TemplateResponse(
         request=request,
         name="productos.html",
-        context={
-            "title": "Papelería Central",
-            "heading": "Inventario de Papelería",
-            "year": datetime.now().year,
-            "productos": productos_db,
-            "errores": [],
-            "form_data": {},
-            "edit_index": edit_index,
-            "edit_data": edit_data,
-        }
+        context=base_context(
+            request,
+            productos=get_all_productos(),
+            errores=[],
+            form_data={},
+            edit_data=edit_data,
+        )
     )
 
 
 @app.post("/productos", response_class=HTMLResponse)
-def crear_producto_html(
+def crear_producto(
     request: Request,
     nombre: str = Form(...),
     categoria: str = Form(...),
-    precio: int = Form(...),
+    precio: float = Form(...),
     stock: int = Form(...),
-    Descripcion: str = Form(...)
+    descripcion: str = Form(...)
 ):
-    form_data = {
-        "nombre": nombre,
-        "categoria": categoria,
-        "precio": precio,
-        "stock": stock,
-        "Descripcion": Descripcion
-    }
-
+    form_data = {"nombre": nombre, "categoria": categoria,
+                 "precio": precio, "stock": stock, "descripcion": descripcion}
+    errores = []
     try:
-        producto = ProductoPapeleria(
-            nombre=nombre,
-            categoria=categoria,
-            precio=precio,
-            stock=stock,
-            Descripcion=Descripcion
-        )
-        productos_db.append(producto)
-        errores = []
+        producto = ProductoPapeleria(**form_data)
+        insert_producto(producto)
         form_data = {}
     except ValidationError as e:
         errores = [err["msg"] for err in e.errors()]
@@ -110,81 +169,65 @@ def crear_producto_html(
     return templates.TemplateResponse(
         request=request,
         name="productos.html",
-        context={
-            "title": "Papelería Central",
-            "heading": "Inventario de Papelería",
-            "year": datetime.now().year,
-            "productos": productos_db,
-            "errores": errores,
-            "form_data": form_data,
-        }
+        context=base_context(
+            request,
+            productos=get_all_productos(),
+            errores=errores,
+            form_data=form_data,
+            edit_data=None,
+        )
     )
 
 
 @app.post("/productos/actualizar", response_class=HTMLResponse)
-def actualizar_producto_html(
+def actualizar_producto(
     request: Request,
-    idx: int = Form(...),
+    pid: int = Form(...),
     nombre: str = Form(...),
     categoria: str = Form(...),
-    precio: int = Form(...),
+    precio: float = Form(...),
     stock: int = Form(...),
-    Descripcion: str = Form(...),
+    descripcion: str = Form(...),
 ):
     errores = []
     try:
         producto = ProductoPapeleria(
-            nombre=nombre,
-            categoria=categoria,
-            precio=precio,
-            stock=stock,
-            Descripcion=Descripcion,
+            nombre=nombre, categoria=categoria,
+            precio=precio, stock=stock, descripcion=descripcion
         )
-        if 0 <= idx < len(productos_db):
-            productos_db[idx] = producto
-        else:
-            errores.append("Índice de producto inválido")
+        update_producto(pid, producto)
     except ValidationError as e:
         errores = [err["msg"] for err in e.errors()]
 
     return templates.TemplateResponse(
         request=request,
         name="productos.html",
-        context={
-            "title": "Papelería Central",
-            "heading": "Inventario de Papelería",
-            "year": datetime.now().year,
-            "productos": productos_db,
-            "errores": errores,
-            "form_data": {},
-            "edit_index": None,
-            "edit_data": None,
-        }
+        context=base_context(
+            request,
+            productos=get_all_productos(),
+            errores=errores,
+            form_data={},
+            edit_data=None,
+        )
     )
 
 
 @app.post("/productos/eliminar", response_class=HTMLResponse)
-def eliminar_producto_html(request: Request, idx: int = Form(...)):
+def eliminar_producto(request: Request, pid: int = Form(...)):
     errores = []
     try:
-        if 0 <= idx < len(productos_db):
-            productos_db.pop(idx)
-        else:
-            errores.append("Índice de producto inválido")
+        delete_producto(pid)
     except Exception as e:
         errores.append(str(e))
 
     return templates.TemplateResponse(
         request=request,
         name="productos.html",
-        context={
-            "title": "Papelería Central",
-            "heading": "Inventario de Papelería",
-            "year": datetime.now().year,
-            "productos": productos_db,
-            "errores": errores,
-            "form_data": {},
-            "edit_index": None,
-            "edit_data": None,
-        }
+        context=base_context(
+            request,
+            productos=get_all_productos(),
+            errores=errores,
+            form_data={},
+            edit_data=None,
+        )
     )
