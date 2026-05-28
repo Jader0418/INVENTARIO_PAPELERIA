@@ -9,22 +9,22 @@ Interfaz web ligera para gestionar un inventario de papelería: agregar, editar,
 Proyecto minimalista construido con FastAPI y Jinja2 que permite administrar productos de una papelería llamada **MISCELANEA JADER**. Está pensado como una base fácil de extender para aplicaciones pequeñas o prototipos.
 
 Características principales:
-- Interfaz web organizada y responsiva.
-- Formulario para agregar productos con validación.
-- Edición in-place y eliminación de productos desde la tabla.
-- Estilos CSS sencillos y funcionales para una buena experiencia de usuario.
+- Interfaz web organizada y funcional.
+- Formulario para crear productos con validación de servidor.
+- Edición y eliminación de productos desde la misma vista.
+- Estilos CSS sencillos para una buena experiencia de usuario.
 
 ## Estructura del repositorio
 
-- `main.py` — Aplicación FastAPI; rutas para ver/crear/editar/eliminar productos.
-- `templates/` — Plantillas Jinja2 (principal: `productos.html`).
+- `main.py` — Aplicación FastAPI con rutas para ver, crear, actualizar y eliminar productos.
+- `templates/` — Plantillas Jinja2 (`productos.html`).
 - `static/style.css` — Estilos para la interfaz.
-- `data.json` — (opcional) presente en el repositorio; la implementación actual usa almacenamiento en memoria.
+- `data.json` — Archivo opcional; la implementación actual usa almacenamiento temporal en memoria.
 
 ## Requisitos
 
-- Python 3.10+ (recomendado)
-- Dependencias (instalarlas en un entorno virtual):
+- Python 3.10+
+- Dependencias:
 
 ```bash
 python -m pip install fastapi uvicorn jinja2 python-multipart
@@ -33,7 +33,7 @@ python -m pip install fastapi uvicorn jinja2 python-multipart
 ## Instalación y ejecución
 
 1. Clona o copia el repositorio en tu máquina.
-2. (Opcional) Crea y activa un entorno virtual:
+2. (Recomendado) Crea y activa un entorno virtual:
 
 ```bash
 python -m venv .venv
@@ -42,60 +42,60 @@ pip install --upgrade pip
 pip install fastapi uvicorn jinja2 python-multipart
 ```
 
-3. Inicia la aplicación:
+3. Ejecuta la aplicación:
 
 ```bash
 uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-4. Abre en el navegador: `http://127.0.0.1:8000`
+4. Abre el navegador en: `http://127.0.0.1:8000`
 
 ## Endpoints disponibles
 
-- `GET /` — Página principal (muestra `productos.html`).
-- `GET /productos` — Lista y formulario (misma vista que `/`).
-- `POST /productos` — Crear un producto (envío desde formulario).
-- `POST /productos/actualizar` — Actualizar un producto existente (recibe `idx` y campos).
-- `POST /productos/eliminar` — Eliminar producto (recibe `idx`).
+- `GET /` — Página principal con la lista de productos.
+- `GET /productos` — Misma vista que `/`, con soporte opcional de edición.
+- `POST /productos` — Crea un producto nuevo desde el formulario.
+- `POST /productos/actualizar` — Actualiza un producto existente.
+- `POST /productos/eliminar` — Elimina un producto.
 
-Nota: los productos se almacenan actualmente en memoria en la variable `productos_db` en `main.py`. Si reinicias la app, los datos se perderán. Se puede adaptar fácilmente para persistencia en `data.json`, SQLite u otra DB.
+> Nota: los datos se guardan en memoria en la variable `productos_db` de `main.py`. Al reiniciar la aplicación, los productos se perderán.
 
-## Validaciones
+## Validaciones de producto
 
-La clase `ProductoPapeleria` (Pydantic) valida campos básicos:
-- `nombre`: longitud mínima y sin espacios vacíos.
-- `categoria`: debe ser una de `Escolar`, `Oficina`, `Arte`, `Tecnología`.
-- `precio`: mayor que 0.
-- `stock`: entero >= 0.
+La clase `ProductoPapeleria` valida los campos de cada producto:
+- `nombre`: no puede estar vacío y debe tener entre 3 y 80 caracteres.
+- `categoria`: debe ser una de `Estudiantil`, `Oficina`, `Tecnología`.
+- `precio`: debe ser un número mayor que 0.
+- `stock`: debe ser un entero mayor o igual a 0.
 - `Descripcion`: se normaliza y guarda en mayúsculas.
 
 ## Diseño y UX
 
 La plantilla `templates/productos.html` incluye:
-- Un bloque informativo para **MISCELANEA JADER** (dirección, horario, contacto, misión).
-- Formulario de alta con ayudas y validación básica del lado del servidor.
-- Tabla con las acciones `Editar` y `Eliminar` por fila.
+- Un bloque informativo para la papelería.
+- Formulario de alta de productos con validación en el servidor.
+- Tabla de productos con botones para `Editar` y `Eliminar`.
 - Estilos responsivos en `static/style.css`.
 
 ## Personalización rápida
 
-- Cambia los textos (nombre, dirección, horario) editando `templates/productos.html` en la sección `hero`.
-- Para persistir datos, reemplaza el uso de `productos_db` por lectura/escritura en `data.json` o una base de datos.
+- Ajusta los textos y datos de la papelería en `templates/productos.html`.
+- Para persistencia real, reemplaza `productos_db` por lectura/escritura en `data.json`, SQLite u otra base de datos.
 
 ## Contribuciones
 
-1. Haz un fork y crea una rama (`feature/mi-cambio`).
-2. Realiza commits claros y descriptivos.
-3. Abre un Pull Request con la descripción de los cambios.
+1. Crea una rama nueva (`feature/mi-cambio`).
+2. Haz commits claros y descriptivos.
+3. Envía un Pull Request con la descripción de tus cambios.
 
 ## Licencia
 
-Este repositorio no incluye una licencia explícita. Para uso público, añade un archivo `LICENSE` (por ejemplo MIT) si deseas permitir reutilización.
+Este proyecto no define una licencia explícita. Si deseas uso público o colaboración abierta, añade un archivo `LICENSE`.
 
 ## Contacto
 
-Si necesitas ayuda o quieres que adapte la aplicación (persistencia, autenticación, exportes CSV, etc.), contáctame y lo implemento.
+Si necesitas ayuda con la app (persistencia, autenticación, exportes CSV, etc.), dime y lo adaptamos.
 
 ---
 
-Gracias por usar MISCELANEA JADER — listo para seguir mejorando según tus necesidades.
+Gracias por usar MISCELANEA JADER. ¡Listo para seguir mejorando!
