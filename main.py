@@ -30,7 +30,7 @@ class ProductoPapeleria(BaseModel):
     @field_validator("categoria")
     @classmethod
     def validar_categoria(cls, value):
-        categorias_validas = ["Escolar", "Oficina", "Arte", "Tecnología"]
+        categorias_validas = ["Estudiantil", "Oficina", "Tecnología"]
         if value not in categorias_validas:
             raise ValueError("La categoría no es válida")
         return value
@@ -43,13 +43,11 @@ class ProductoPapeleria(BaseModel):
 
 @app.get("/")
 def inicio(request: Request):
-    # Mostrar directamente la vista de productos en la raíz
     return ver_productos(request)
 
 
 @app.get("/productos", response_class=HTMLResponse)
 def ver_productos(request: Request):
-    # Permitir indicar un índice a editar mediante query param ?editar=0
     editar = request.query_params.get("editar")
     edit_index = None
     edit_data = None
@@ -58,15 +56,14 @@ def ver_productos(request: Request):
             idx = int(editar)
             if 0 <= idx < len(productos_db):
                 edit_index = idx
-                # convertir el modelo pydantic a dict para rellenar el formulario
                 edit_data = productos_db[idx].model_dump()
         except Exception:
             edit_index = None
 
     return templates.TemplateResponse(
-        "productos.html",
-        {
-            "request": request,
+        request=request,
+        name="productos.html",
+        context={
             "title": "Papelería Central",
             "heading": "Inventario de Papelería",
             "year": datetime.now().year,
@@ -84,7 +81,7 @@ def crear_producto_html(
     request: Request,
     nombre: str = Form(...),
     categoria: str = Form(...),
-    precio: float = Form(...),
+    precio: int = Form(...),
     stock: int = Form(...),
     Descripcion: str = Form(...)
 ):
@@ -111,15 +108,15 @@ def crear_producto_html(
         errores = [err["msg"] for err in e.errors()]
 
     return templates.TemplateResponse(
-        "productos.html",
-        {
-            "request": request,
+        request=request,
+        name="productos.html",
+        context={
             "title": "Papelería Central",
             "heading": "Inventario de Papelería",
             "year": datetime.now().year,
             "productos": productos_db,
             "errores": errores,
-            "form_data": form_data
+            "form_data": form_data,
         }
     )
 
@@ -130,7 +127,7 @@ def actualizar_producto_html(
     idx: int = Form(...),
     nombre: str = Form(...),
     categoria: str = Form(...),
-    precio: float = Form(...),
+    precio: int = Form(...),
     stock: int = Form(...),
     Descripcion: str = Form(...),
 ):
@@ -151,9 +148,9 @@ def actualizar_producto_html(
         errores = [err["msg"] for err in e.errors()]
 
     return templates.TemplateResponse(
-        "productos.html",
-        {
-            "request": request,
+        request=request,
+        name="productos.html",
+        context={
             "title": "Papelería Central",
             "heading": "Inventario de Papelería",
             "year": datetime.now().year,
@@ -162,7 +159,7 @@ def actualizar_producto_html(
             "form_data": {},
             "edit_index": None,
             "edit_data": None,
-        },
+        }
     )
 
 
@@ -178,9 +175,9 @@ def eliminar_producto_html(request: Request, idx: int = Form(...)):
         errores.append(str(e))
 
     return templates.TemplateResponse(
-        "productos.html",
-        {
-            "request": request,
+        request=request,
+        name="productos.html",
+        context={
             "title": "Papelería Central",
             "heading": "Inventario de Papelería",
             "year": datetime.now().year,
@@ -189,5 +186,5 @@ def eliminar_producto_html(request: Request, idx: int = Form(...)):
             "form_data": {},
             "edit_index": None,
             "edit_data": None,
-        },
+        }
     )
