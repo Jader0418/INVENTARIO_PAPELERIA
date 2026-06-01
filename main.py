@@ -34,11 +34,19 @@ def init_db():
             creado_en TEXT NOT NULL
         )
     """)
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_productos_nombre ON productos(nombre)")
     conn.commit()
     conn.close()
 
 
 init_db()
+
+
+def get_producto_by_nombre(nombre: str):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM productos WHERE lower(nombre) = lower(?)", (nombre.strip(),)).fetchone()
+    conn.close()
+    return dict(row) if row else None
 
 
 class ProductoPapeleria(BaseModel):
@@ -61,6 +69,22 @@ class ProductoPapeleria(BaseModel):
         categorias_validas = ["Estudiantil", "Oficina", "Tecnología"]
         if value not in categorias_validas:
             raise ValueError("La categoría no es válida")
+        return value
+
+    @field_validator("precio")
+    @classmethod
+    def validar_precio(cls, value):
+        if value < 1000:
+            raise ValueError("El precio debe ser igual o superior a $1.000")
+        return value
+
+    @field_validator("stock")
+    @classmethod
+    def validar_stock(cls, value):
+        if value < 1:
+            raise ValueError("El stock debe ser mínimo 1 unidad")
+        if value > 150:
+            raise ValueError("El stock no puede exceder 150 unidades")
         return value
 
     @field_validator("descripcion")
@@ -161,8 +185,11 @@ def crear_producto(
     errores = []
     try:
         producto = ProductoPapeleria(**form_data)
-        insert_producto(producto)
-        form_data = {}
+        if get_producto_by_nombre(producto.nombre):
+            errores.append("Ya existe un producto con ese nombre")
+        else:
+            insert_producto(producto)
+            form_data = {}
     except ValidationError as e:
         errores = [err["msg"] for err in e.errors()]
 
@@ -195,7 +222,11 @@ def actualizar_producto(
             nombre=nombre, categoria=categoria,
             precio=precio, stock=stock, descripcion=descripcion
         )
-        update_producto(pid, producto)
+        existing = get_producto_by_nombre(producto.nombre)
+        if existing and existing["id"] != pid:
+            errores.append("Ya existe otro producto con ese nombre")
+        else:
+            update_producto(pid, producto)
     except ValidationError as e:
         errores = [err["msg"] for err in e.errors()]
 
