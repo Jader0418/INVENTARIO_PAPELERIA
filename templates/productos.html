@@ -13,11 +13,11 @@
     <div class="header-logo">
       <div class="logo-icon">🏪</div>
       <div>
-        <h1>Miscelánea Jader's</h1>
-        <p class="subtitle">Sistema de inventario · Gran Britalia, Bogotá</p>
+        <h1>MISCELÁNEA JADER</h1>
+        <p class="subtitle">SISTEMA DE INVENTARIO · GRAN BRITALIA, BOGOTÁ</p>
       </div>
     </div>
-    <div class="header-brand">📚 Papelería Central</div>
+    <div class="header-brand">📚 PAPELERÍA CENTRAL</div>
   </div>
 </header>
 <div class="pattern-banner"></div>
@@ -35,19 +35,19 @@
     </div>
     <div class="info-grid">
       <div class="info-cell">
-        <strong>📍 Dirección</strong>
+        <strong>📍 DIRECCIÓN</strong>
         <span>Cra 81j #47b -53 Sur · Gran Britalia</span>
       </div>
       <div class="info-cell">
-        <strong>📞 Contacto</strong>
+        <strong>📞 CONTACTO</strong>
         <span>+57 350 5218141</span>
       </div>
       <div class="info-cell">
-        <strong>⏰ Horario</strong>
+        <strong>⏰ HORARIO</strong>
         <span>Lun – Sáb · 9:00am — 8:00pm</span>
       </div>
       <div class="info-cell">
-        <strong>✨ ¿Por qué elegirnos?</strong>
+        <strong>✨ ¿POR QUÉ ELEGIRNOS?</strong>
         <span>Productos de calidad a precios accesibles, con atención amable y rápida.</span>
       </div>
     </div>
@@ -60,7 +60,7 @@
     <div class="panel">
       <div class="panel-header">
         <div class="panel-icon">➕</div>
-        <h3>Agregar producto</h3>
+        <h3>AGREGAR PRODUCTO</h3>
       </div>
       <div class="panel-body">
 
@@ -72,12 +72,12 @@
 
         <form action="/productos" method="post" class="form-grid">
           <div class="field">
-            <label>Producto</label>
+            <label>PRODUCTO</label>
             <input name="nombre" placeholder="Ej: Cuaderno 100 hojas" value="{{ form_data.nombre or '' }}" required>
             <span class="help">Elije el producto que deseas agregar</span>
           </div>
           <div class="field">
-            <label>Categoría</label>
+            <label>CATEGORÍA</label>
             <select name="categoria" required>
               <option value="">Seleccione...</option>
               <option value="Estudiantil" {% if form_data.categoria == 'Estudiantil' %}selected{% endif %}>📚 Estudiantil</option>
@@ -86,22 +86,22 @@
             </select>
           </div>
           <div class="field">
-            <label>Precio ($)</label>
-            <input type="number" step="0.01" min="0.01" name="precio" placeholder="0.00" value="{{ form_data.precio or '' }}" required>
-            <span class="help">Precio en pesos colombianos</span>
+            <label>PRECIO ($)</label>
+            <input type="number" step="0.01" min="1000.00" name="precio" placeholder="0.00" value="{{ form_data.precio or '' }}" required>
+            <span class="help">Precio en pesos colombianos (mínimo $1.000)</span>
           </div>
           <div class="field">
-            <label>Stock</label>
-            <input type="number" name="stock" min="0" placeholder="0" value="{{ form_data.stock or '' }}" required>
-            <span class="help">Unidades en el inventario</span>
+            <label>STOCK</label>
+            <input type="number" name="stock" min="1" max="150" placeholder="0" value="{{ form_data.stock or '' }}" required>
+            <span class="help">Unidades en el inventario (1 - 150)</span>
           </div>
           <div class="field full">
-            <label>Descripción</label>
+            <label>DESCRIPCIÓN</label>
             <input name="descripcion" placeholder="Breve descripción del producto" value="{{ form_data.descripcion or '' }}" required maxlength="20">
             <span class="help">Breve descripción del producto. Máx. 20 caracteres.</span>
           </div>
           <div class="full actions-row">
-            <button class="btn btn-primary" type="submit">➕ Agregar producto</button>
+            <button class="btn btn-primary" type="submit">➕ AGREGAR PRODUCTO</button>
           </div>
         </form>
       </div>
@@ -132,11 +132,13 @@
           </div>
           <div class="field">
             <label>Precio ($)</label>
-            <input type="number" step="0.01" name="precio" value="{{ edit_data.precio }}" required>
+            <input type="number" step="0.01" min="1000.00" name="precio" value="{{ edit_data.precio }}" required>
+            <span class="help">Mínimo $1.000</span>
           </div>
           <div class="field">
             <label>Stock</label>
-            <input type="number" name="stock" value="{{ edit_data.stock }}" required>
+            <input type="number" min="1" max="150" name="stock" value="{{ edit_data.stock }}" required>
+            <span class="help">Entre 1 y 150 unidades</span>
           </div>
           <div class="field full">
             <label>Descripción</label>
@@ -157,7 +159,7 @@
   <div class="section-table">
     <div class="section-table-header">
       <h3>
-        📦 Listado de productos
+        📦 LISTADO DE PRODUCTOS
         <span class="badge badge-teal">{{ productos|length }} productos</span>
       </h3>
     </div>
